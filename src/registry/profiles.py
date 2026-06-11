@@ -27,3 +27,8 @@ DEFAULT_TARGETS: dict[Profile, frozenset[str]] = {
     "default": frozenset({"feet", "yard"}),
     "business": SUPPORTED_UNITS,
 }
+
+TARGET_ORDER: dict[Profile, tuple[str, ...]] = {
+    "default": ("feet", "yard"),
+    "business": ("feet", "yard", "inch", "mm"),
+}

@@ -1,91 +1,79 @@
-# REFACTOR Smell — magic_square
+# REFACTOR Smell — UnitConverter_XX ARRR
 
-`src/magic_square.py`의 **코드 스멜**만 식별·목록화한다. 리팩터링 코드 변경은 하지 않는다.
+`src/`의 **코드 스멜만** 식별·목록화한다. **리팩터링 코드 변경은 하지 않는다.**
 
-## 자동 입력 (질문 금지)
+## SSOT
 
-| SSOT | 용도 |
+| 문서 | 용도 |
 |------|------|
-| `.cursorrules` | REFACTOR Phase 정의 |
-| `src/magic_square.py` | 분석 대상 |
-| `tests/test_magic_square.py` | 동작 기준 (변경 금지) |
-| `docs/PRD.md` § NFR-04 | SRP·유지보수 |
-
-파일이 없으면: "구현 없음 — GREEN 후 재실행"으로 보고하고 **종료** (질문 없음).
+| `.cursorrules` | SRP · OCP · REFACTOR Phase |
+| `docs/PRD.md` | §7 아키텍처 · FR-05/06 |
+| `Report/STEP3_ValidateLines_Report.md` | 출력/검증 역할 분리 |
 
 ## Phase 선언 (필수)
 
 응답 **첫 줄**:
 
 ```
-REFACTOR — magic_square: smell audit (<n>건)
+REFACTOR — UnitConverter: smell audit (<n>건)
 ```
 
-## 사전 조건
+## 자동 절차 (/refactor-smell 단독 입력 시)
 
-```bash
-pytest tests/test_magic_square.py -q
-```
+**질문 없이** 즉시 실행.
 
-- **전부 통과**해야 smell audit 시작.
-- 실패 중이면: 리팩터 금지, `/green-minimal` 권장만 보고.
+1. `python -m pytest tests/ -q` — **전부 pass** 확인 (실패 시 smell audit 중단 → `/green-minimal` 권고)
+2. 분석 대상 읽기:
+   - `src/validate_lines.py`
+   - `src/registry/` · `src/conversion/`
+   - `src/output/text.py` · `src/session/continuous.py`
+   - `src/input/entity/d_loc_01.py`
+3. 아래 **스멜 체크리스트**로 smell 목록 작성 (코드 변경 **0**)
+4. 각 smell에 **S#** · 심각도 · `/refactor-safe` 후보 여부 표시
+5. 보고 템플릿 응답
 
-## 스멜 점검 체크리스트
+## 스멜 체크리스트 (UnitConverter)
 
-| # | 스멜 | 징후 (magic_square) |
-|---|------|---------------------|
-| S1 | 하드코딩 / 특수 케이스 | `_KNOWN_3X3` 등 literal 비교만으로 pass |
-| S2 | 긴 함수 | 행·열·대각 검증이 한 함수에 혼재 |
-| S3 | 중복 | 합 계산·범위 검사 반복 |
-| S4 | 매직 넘버 | 15, 3, 9 등 의미 없는 상수 |
-| S5 | dead code | T01 전용 분기 잔존 |
-| S6 | SRP 위반 | parse · validate · sum이 한 모듈에 뒤섞임 |
-| S7 | 테스트 결합 | production이 특정 테스트 grid import |
+| # | 스멜 | 징후 |
+|---|------|------|
+| S1 | **God module** | `validate_lines.py`에 파싱·변환·포맷·세션 검증 혼재 |
+| S2 | **Duplicated conversion** | `UnitConverter.py`와 `conversion/meter` 비율 중복 |
+| S3 | **Magic number** | 3.28084 · 1.09361이 registry 밖 하드코딩 |
+| S4 | **Dead stub** | `NotImplementedError` 스텁과 실제 호출 경로 불일치 |
+| S5 | **Leaky KPI** | validate_lines가 입력 Invalid·시간 KPI 검증 시도 |
+| S6 | **Profile scatter** | 자릿수·타깃 규칙이 registry 외 파일에 분산 |
+| S7 | **Long function** | `_collect_errors` 등 40줄+ 단일 함수 |
+| S8 | **CLI coupling** | `UnitConverter.py`가 변환·출력·검증 미분리 (FR-06) |
 
-각 항목: **있음 / 없음 / 해당 없음** + 근거 **한 줄** + `src/` **위치(함수·줄)**.
+## 심각도
 
-## 산출 형식
+| 등급 | 기준 |
+|------|------|
+| 높음 | KPI·계약 위반 위험 · 중복 비율 |
+| 중간 | SRP/OCP 위반 · 유지보수 비용 |
+| 낮음 | 명명·구조 미세 개선 |
 
-```markdown
-## Smell 목록
-
-| ID | 스멜 | 위치 | 근거 | 심각도 |
-|----|------|------|------|--------|
-| S1 | 하드코딩 | validate_magic_square L12 | G1 literal만 pass | 높음 |
-| … | … | … | … | … |
-
-## REFACTOR 후보 (우선순위)
-
-1. <S#> — <한 줄 개선 방향>
-2. …
-
-## 금지 (이번 Phase)
-
-- src/tests 수정 없음
-- pytest 재실행은 사전 조건 확인용만
-```
-
-## 완료 보고 형식
+## 보고 템플릿
 
 ```
-REFACTOR — magic_square: smell audit (<n>건)
+REFACTOR — UnitConverter: smell audit (<n>건)
 
-pytest: passed (사전 조건)
-스멜: <n>건 (높음 <a> / 중 <b> / 낮 <c>)
-1순위: S1 — <한 줄>
+pytest: <N> passed (선행 조건)
 
-다음: /refactor-safe — 1순위만 적용
+| S# | 스멜 | 위치 | KPI/FR | 심각도 | safe 후보 |
+|----|------|------|--------|--------|-----------|
+| S1 | … | validate_lines.py L… | FR-06 | 높음 | ✅ |
+
+권장 순서: S<n> → S<n> (동작 변경 없음 전제)
+
+다음: /refactor-safe — S<최우선#>
 ```
 
-## 금지 (REFACTOR Smell)
+## 금지
 
 | 금지 | 이유 |
 |------|------|
-| `src/` · `tests/` 코드 수정 | smell audit만 |
-| 동작 변경 제안을 코드로 적용 | safe에서 수행 |
-| 테스트 없이 audit | 사전 pytest 필수 |
-| 사용자에게 우선순위 질문 | 표·심각도로 자율 정렬 |
-
-## 수정 허용
-
-- **없음** (분석 응답만)
+| `src/` · `tests/` 수정 | smell audit만 |
+| pytest 실패 상태에서 audit | 기준선 없음 |
+| 사용자 질문 | 슬래시 단독 |
+| git commit/push | `.cursorrules` |

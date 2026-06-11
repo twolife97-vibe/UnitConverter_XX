@@ -40,3 +40,17 @@ def test_d_loc_01_missing_colon_invalid_format():
         "value": None,
         "errors": ["Invalid format. Use unit:value (ex: meter:2.5)"],
     }
+
+
+def test_d_loc_01_blank_unit_invalid():
+    # Arrange — blank unit (PRD §4.1 후순위 RED)
+    raw = ":2.5"
+    # Act
+    result = parse_unit_value_coords(raw)
+    # Assert
+    assert result == {
+        "status": "invalid",
+        "unit": "",
+        "value": None,
+        "errors": ["Invalid unit: "],
+    }

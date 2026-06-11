@@ -1,96 +1,121 @@
-# Golden Master — magic_square
+# Golden Master — UnitConverter_XX ARRR
 
-알려진 **정답 격자(Golden)** 와 기대 `status`/`errors`를 테스트로 고정한다. RED(테스트 추가) → GREEN(일반화) 한 사이클로 진행한다.
+**Golden 표 1건**을 RED 테스트로 추가한 뒤, **GREEN 최소 일반화**까지 한 사이클로 수행한다.
 
-## 자동 입력 (질문 금지)
+## SSOT
 
-| SSOT | 용도 |
+| 문서 | 용도 |
 |------|------|
-| `.cursor/skills/magic-square-tdd/SKILL.md` | Golden 표 · API |
-| `tests/test_magic_square.py` | 기존 테스트와 **중복 없이** 1건 추가 |
-| `.cursorrules` | RED→GREEN 순서 |
+| `.cursorrules` | RED→GREEN · API |
+| `docs/PRD.md` | §3·§6.2 비율 · KPI-6 |
+| `Report/STEP3_ValidateLines_Report.md` | business 예 · F6 |
 
-**기본 Golden (이미 RED됐으면 다음 행):**
+## Phase 선언
 
-| ID | grid | status |
-|----|------|--------|
-| G1 | `[[8,1,6],[3,5,7],[4,9,2]]` | pass |
-| G2 | `[[2,7,6],[9,5,1],[4,3,8]]` | pass |
-| G3 | `[[1]]` | pass (1×1) |
-| G4 | `[[2,7,6],[9,5,1],[4,3,9]]` | fail (합 불일치) |
-
-- 파일에 없는 **첫 Golden ID** 1개만 이번 사이클에 추가.
-
-## Phase 선언 (필수)
-
-**RED 단계** (테스트 추가) 응답 첫 줄:
+RED 단계:
 
 ```
-RED — magic_square: golden master (<G#>)
+RED — UnitConverter: golden master (<G#>)
 ```
 
-**GREEN 단계** (구현 일반화) 응답 첫 줄:
+GREEN 단계 (같은 응답 또는 후속):
 
 ```
-GREEN — magic_square: golden master (<G#>)
+GREEN — UnitConverter: golden master (<G#>)
 ```
 
-한 번의 `/golden-master` 호출 = **RED 완료 + pytest 실패 확인**까지. GREEN은 같은 세션에서 이어서 수행하거나 `/green-minimal`로 위임.
+## 자동 절차 (/golden-master 단독 입력 시)
 
-## Golden 테스트 패턴
+**질문 없이** 즉시 실행.
+
+1. SSOT에서 **Golden 표** 확정 (아래 §고정 표)
+2. **G-next** — 아직 TC에 없는 Golden **첫 행** 선택
+3. RED: `tests/`에 Golden assert 테스트 **1개** 추가
+4. `pytest` → 의도적 실패 확인
+5. GREEN: `src/` **최소 일반화** (literal-only 제거, 비율·프로필 재사용)
+6. `pytest tests/ -q` 전체 pass 확인
+7. 보고 (RED+GREEN 요약)
+
+## Golden 표 (SSOT — `docs/PRD.md` · STEP3)
+
+| G# | 입력 | profile | 기대 출력 줄 (요약) | KPI |
+|----|------|---------|---------------------|-----|
+| G1 | `meter:2.5` | default | feet 8.2021 · yard 2.7340 | KPI-6 |
+| G2 | `meter:2.5` | business | + inch 98.4252 · mm 2500 | KPI-5 |
+| G3 | `feet:12` | default | yard 4.0000 (타깃 yard만) | KPI-6 |
+| G4 | `yard:2.5` | default | feet 7.5000 (타깃 feet만) | KPI-6 |
+| G5 | `meter:1` | business | mm 1000 (정수) | KPI-5 |
+
+**G-next 규칙:** `tests/`에 해당 입력·profile assert가 **없는 첫 G#**.  
+`convert_to_lines` Track이 없으면 `validate_lines`용 `lines` assert로 동일 Golden 적용.
+
+## RED 템플릿 — output Track
 
 ```python
-@pytest.mark.parametrize(
-    "grid,expected",
-    [
-        (
-            [[8, 1, 6], [3, 5, 7], [4, 9, 2]],
-            {"status": "pass", "errors": []},
-        ),
-    ],
-)
-def test_golden_pass(grid, expected):
-    result = validate_magic_square(grid)
-    assert result == expected
+def test_golden_g1_meter_default():
+    lines = convert_to_lines(2.5, "meter", profile="default")
+    assert lines == [
+        "2.5 meter = 8.2021 feet",
+        "2.5 meter = 2.7340 yard",
+    ]
 ```
 
-- parametrize **1 케이스** 또는 단일 함수 1개 (RED 1개 원칙).
-- Golden grid는 SKILL 표와 **동일 값** 사용 (임의 변경 금지).
+## RED 템플릿 — validate_lines Track
 
-## 절차
+```python
+def test_golden_g2_meter_business():
+    lines = [
+        "2.5 meter = 8.2021 feet",
+        "2.5 meter = 2.7340 yard",
+        "2.5 meter = 98.4252 inch",
+        "2.5 meter = 2500 mm",
+    ]
+    result = validate_lines(lines, profile="business")
+    assert result == {"status": "pass", "failed_lines": []}
+```
 
-1. **RED** — `tests/`에 Golden 테스트 1개 추가
-2. **실행** — `pytest tests/test_magic_square.py -q` → **의도적 실패**
-3. **GREEN** — `src/magic_square.py`를 Golden+기존 통과 테스트 모두 만족하도록 **최소** 일반화
-4. **재실행** — 전 테스트 통과
+(G2는 기존 `test_kpi5_*`와 중복이면 **G3**로 자동 승급)
 
-## 완료 보고 형식
+## GREEN 일반화 원칙
+
+| Before (minimal) | After (golden) |
+|------------------|----------------|
+| `if value == 2.5 and unit == "meter"` | `registry` + `conversion/meter` |
+| 단일 profile | `profile` 파라미터 분기 |
+| 단일 타깃 | `DEFAULT_TARGETS[profile] - {source}` |
+
+**공개 API 시그니처 변경 금지** — `.cursorrules` 계약 유지.
+
+## pytest
+
+```bash
+python -m pytest tests/ -q
+```
+
+## 보고 템플릿
 
 ```
-RED — magic_square: golden master (G2)
+RED — UnitConverter: golden master (G<n>)
+추가: tests/<파일> :: <함수명>
+pytest: FAILED — <한 줄>
 
-추가: tests/test_magic_square.py :: <함수명>
-Golden: G2 — 3×3 pass (Lo Shu 변형)
-pytest: <실패 한 줄>
+GREEN — UnitConverter: golden master (G<n>)
+변경: src/<모듈> — <일반화 한 줄>
+pytest: <N> passed
 
-GREEN — magic_square: golden master (G2)
-
-변경: src/magic_square.py — <일반화 한 줄>
-pytest: passed <N>
-
-다음: /golden-master (G3) 또는 /refactor-smell
+다음: /red-skeleton 또는 /golden-master (G<n+1>)
 ```
 
 ## 금지
 
 | 금지 | 이유 |
 |------|------|
-| Golden 값 임의 변경 | 회귀 기준선 파괴 |
-| RED·GREEN 동시에 테스트만 추가하고 구현 생략 | Golden은 통과까지가 한 사이클 |
-| snapshot 파일 도입 (v1) | 격자 literal이 SSOT |
-| 사용자에게 Golden 선택 질문 | G1→G4 순서 고정 |
+| Golden 2건 동시 RED | 한 사이클 1건 |
+| assert 완화 | Golden 엄격 유지 |
+| 사용자 질문 | 슬래시 단독 |
+| git commit/push | `.cursorrules` |
 
 ## 수정 허용
 
-- RED: `tests/` 만
-- GREEN: `src/magic_square.py` + pytest
+- RED: `tests/`만
+- GREEN: `src/` 최소 + pytest

@@ -59,6 +59,18 @@ def test_kpi5_business_missing_mm_incomplete():
     }
 
 
+def test_kpi5_invalid_format_fail():
+    # Arrange — F1 형식 위반 (공백·= 구분 없음)
+    lines = ["2.5meter=8.2021feet"]
+    # Act
+    result = validate_lines(lines, profile="default")
+    # Assert
+    assert result == {
+        "status": "fail",
+        "failed_lines": ["line 1: invalid format: '2.5meter=8.2021feet'"],
+    }
+
+
 # --- KPI-4: 연속 처리 (FR-11, validate_session) ---
 
 

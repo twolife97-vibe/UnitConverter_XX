@@ -7,6 +7,13 @@ def parse_unit_value_coords(raw: str) -> dict:
             "errors": ["Invalid format. Use unit:value (ex: meter:2.5)"],
         }
     unit, value_str = raw.split(":", 1)
+    if not unit:
+        return {
+            "status": "invalid",
+            "unit": unit,
+            "value": None,
+            "errors": [f"Invalid unit: {unit}"],
+        }
     try:
         value = float(value_str)
     except ValueError:

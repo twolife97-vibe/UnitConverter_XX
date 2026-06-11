@@ -1,86 +1,94 @@
-# GREEN Minimal — magic_square
+# GREEN Minimal — UnitConverter_XX ARRR
 
-현재 **실패 중인** `tests/test_magic_square.py` 테스트를 통과시키는 **최소** 구현만 `src/`에 추가한다.
+현재 **실패 중인** 테스트 **1건**을 통과시키는 **최소** 구현만 `src/`에 추가한다.
 
-## 자동 입력 (질문 금지)
+## SSOT
 
-| SSOT | 용도 |
+| 문서 | 용도 |
 |------|------|
-| `.cursorrules` | GREEN은 `src/` 최소 수정 |
-| `.cursor/skills/magic-square-tdd/SKILL.md` | API 반환형·T01 동작 |
-| `tests/test_magic_square.py` | **현재 실패 테스트** — 이것만 통과 목표 |
-
-실패 테스트가 없으면: SKILL § T01에 맞는 RED skeleton 1개를 먼저 추가한 뒤 GREEN (RED Phase 선언 후 tests/만).
+| `.cursorrules` | GREEN Phase · 최소 diff |
+| `docs/PRD.md` | KPI · 비율 · 프로필 |
+| `Report/STEP3_ValidateLines_Report.md` | 출력 형식 · F1~F7 |
 
 ## Phase 선언 (필수)
 
 응답 **첫 줄**:
 
 ```
-GREEN — magic_square: minimal (<통과시킨 테스트 함수명>)
+GREEN — UnitConverter: minimal (<통과시킨 테스트 함수명>)
 ```
 
-## 대상 API
+## 자동 절차 (/green-minimal 단독 입력 시)
 
-```python
-def validate_magic_square(grid: list[list[int]]) -> dict:
-    return {"status": "pass" | "fail" | "invalid", "errors": list[str]}
-```
+**질문 없이** 즉시 실행.
 
-## GREEN 절차
+1. `python -m pytest tests/ -q --tb=no` 실행 → **첫 실패 테스트** 1건 식별
+2. 실패 없으면 → `NotImplementedError`를 raise하는 `src/` 함수(`output/text` · `session/continuous`) 중 **KPI 우선순위 높은 1건**에 대응 RED가 있는지 확인; 없으면 `/red-skeleton` 권고만 하고 종료
+3. 해당 테스트만 통과하도록 **`src/` 최소** 수정
+4. `pytest tests/ -q` 전체 회귀 확인
+5. 보고 템플릿 응답
 
-1. **실패 확인** — `pytest tests/test_magic_square.py -q` 로 대상 1개 실패 재현
-2. **최소 구현** — T01(3×3 pass)만 통과하는 코드 (하드코딩·특수 케이스 허용)
-3. **회귀** — `pytest tests/test_magic_square.py -q` 전부 통과
-4. **범위** — 통과에 불필요한 일반화·리팩터 **금지** (REFACTOR로 미룸)
+## 대상 API (Track별 최소 구현 가이드)
 
-### 최소 구현 예 (T01만)
+### `src/output/text.py` — `convert_to_lines` (KPI-5/6)
 
-```python
-_KNOWN_3X3 = [[8, 1, 6], [3, 5, 7], [4, 9, 2]]
+- `src/registry/units.py` · `src/conversion/meter.py` 재사용
+- `DEFAULT_TARGETS[profile] - {unit}` 타깃만 출력
+- 형식: `{value} {unit} = {formatted} {target}` (`docs/PRD.md` §6.3)
+- **hardcode 2.5 meter만 pass** 허용 (T-next 1건 최소 GREEN)
 
-def validate_magic_square(grid):
-    if grid == _KNOWN_3X3:
-        return {"status": "pass", "errors": []}
-    return {"status": "fail", "errors": ["not implemented"]}
-```
+### `src/session/continuous.py` — `run_continuous` (KPI-4)
 
-- 위는 **예시**; 실제 코드는 현재 failing assert에 맞출 것.
-- fail/invalid 일반 로직은 **다음 RED**까지 미룸.
+- 테스트에서 주입한 `convert_fn` 또는 monkeypatch stdin으로 **2회 입력** 시뮬
+- `list[list[str]]` 반환 — **테스트가 요구하는 최소**만
 
-## 실행
+### `src/validate_lines.py` (KPI-5 fail)
+
+- 이미 구현된 경우: 실패 원인이 테스트 오류면 **tests/ 수정 금지** — 구현 버그만 수정
+- dict API `{status, failed_lines}` 유지
+
+### `src/input/entity/d_loc_01.py` (KPI-3)
+
+- `parse_unit_value_coords` — blank unit `":2.5"` invalid 처리 **최소**
+
+## GREEN 원칙
+
+| 원칙 | 설명 |
+|------|------|
+| 최소 | 통과 테스트 1개만 목표; 일반화는 `/golden-master` |
+| 회귀 | `pytest tests/ -q` **전부** pass |
+| SRP | 변환 로직은 `conversion/` · 비율은 `registry/` |
+| diff | 요청 밖 파일·주석·리팩터 금지 |
+
+## pytest
 
 ```bash
-pytest tests/test_magic_square.py -q
+python -m pytest tests/ -q
 ```
 
-- **기대:** 추가·수정한 테스트 **전부 통과**
-
-## 완료 보고 형식
+## 보고 템플릿
 
 ```
-GREEN — magic_square: minimal (<함수명>)
+GREEN — UnitConverter: minimal (<함수명>)
 
-변경: src/magic_square.py — <한 줄 요약>
-통과 테스트: tests/test_magic_square.py :: <함수명>
+변경: src/<모듈> — <한 줄 요약>
+통과: tests/<파일> :: <함수명>
+회귀: pytest tests/ -q → <N> passed
 
-pytest 결과:
-  <passed N>
-
-다음: /red-skeleton — T02 fail 케이스 RED, 또는 /golden-master
+다음: /red-skeleton (다음 KPI) 또는 /golden-master (일반화)
 ```
 
-## 금지 (GREEN Minimal)
+## 금지 (GREEN)
 
 | 금지 | 이유 |
 |------|------|
 | 테스트 삭제·assert 완화 | 요구 희석 |
-| T01 외 케이스 선행 구현 | YAGNI · 다음 RED 위반 |
-| REFACTOR (구조 개편) | Phase 혼합 |
-| `UnitConverter.py` · `validate_lines.py` 수정 | 범위 밖 |
-| 사용자에게 구현 방식 질문 | 최소 통과로 자율 결정 |
+| `UnitConverter.py` CLI 연동 | 별도 STEP |
+| 사용자 질문 | 슬래시 단독 |
+| git commit/push | `.cursorrules` |
+| REFACTOR성 대규모 이동 | `/refactor-safe` |
 
 ## 수정 허용
 
-- `src/magic_square.py` (없으면 생성 + `src/__init__.py` 확인)
-- GREEN 확인용 `pytest` 실행
+- `src/` — 실패 테스트 통과에 필요한 최소
+- GREEN 확인용 pytest 실행

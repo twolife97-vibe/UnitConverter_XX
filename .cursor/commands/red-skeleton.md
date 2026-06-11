@@ -1,101 +1,150 @@
-# RED Skeleton — magic_square
+# RED Skeleton — UnitConverter_XX ARRR
 
-`validate_magic_square`에 대한 **실패하는 테스트 골격**을 `tests/`에 추가한다. 구현은 건드리지 않는다.
+**실패하는 테스트 골격 1개**만 `tests/`에 추가한다. `src/`는 건드리지 않는다.
 
-## 자동 입력 (질문 금지)
+## SSOT
 
-| SSOT | 용도 |
+| 문서 | 용도 |
 |------|------|
-| `.cursorrules` | RED는 `tests/`만 |
-| `.cursor/skills/magic-square-tdd/SKILL.md` | API·import·첫 RED 케이스(T01) |
-| `.cursor/commands/red-test-plan.md` | 없으면 SKILL § 기본 케이스 T01 사용 |
-
-**1순위 RED:** T01 — 3×3 정답 → `status: pass`, `errors: []`
+| `.cursorrules` | RED Phase · API · 금지 |
+| `docs/PRD.md` | KPI · FR · 테스트 Track |
+| `Report/STEP3_ValidateLines_Report.md` | F1~F7 · 프로필 |
 
 ## Phase 선언 (필수)
 
 응답 **첫 줄**:
 
 ```
-RED — magic_square: skeleton (<테스트 함수명>)
+RED — UnitConverter: skeleton (<테스트 함수명>)
 ```
 
-## 대상 API
+## 자동 절차 (/red-skeleton 단독 입력 시)
+
+**질문 없이** 즉시 실행.
+
+1. SSOT + `tests/` · `src/output/text.py` · `src/session/continuous.py` 읽기
+2. **T-next 자동 선택** — `/red-test-plan` 백로그 우선순위(#1→#6)에서 **TC 없음 또는 스텁**인 첫 항목
+3. **테스트 1개** AAA 골격 추가 (아래 Track별 규칙)
+4. `pytest` 실행 → **의도적 실패** 확인
+5. 보고 템플릿으로 응답
+
+## T-next 자동 선택 (고정 우선순위)
+
+| 순위 | 파일 | 함수명 패턴 | KPI |
+|------|------|-------------|-----|
+| 1 | `tests/test_output_text.py` (없으면 생성) | `test_kpi6_convert_to_lines_default_pass` | KPI-6 |
+| 2 | 동일 | `test_kpi5_convert_to_lines_business_pass` | KPI-5 |
+| 3 | `tests/test_session_continuous.py` (없으면 생성) | `test_kpi4_run_continuous_two_inputs_pass` | KPI-4 |
+| 4 | `tests/test_validate_lines.py` | `test_kpi5_invalid_format_fail` | KPI-5 |
+| 5 | `tests/entity/test_d_loc_01.py` | `test_d_loc_01_blank_unit_invalid` | KPI-3 |
+
+**규칙:** 해당 파일에 **동명·동요구 테스트가 이미 있으면** 다음 순위로 내려간다.
+
+## Track별 AAA 템플릿
+
+### output — `convert_to_lines` (KPI-5/6)
 
 ```python
-from src.magic_square import validate_magic_square
+from src.output.text import convert_to_lines
 
-result = validate_magic_square(grid)
-# {"status": "pass" | "fail" | "invalid", "errors": [...]}
-```
-
-## AAA 절차
-
-1. **Arrange** — T01 격자 `[[8,1,6],[3,5,7],[4,9,2]]`
-2. **Act** — `result = validate_magic_square(grid)`
-3. **Assert** — `result == {"status": "pass", "errors": []}` (**엄격**, 완화 금지)
-
-```python
-def test_3x3_valid_pass():
+def test_kpi6_convert_to_lines_default_pass():
     # Arrange
-    grid = [
-        [8, 1, 6],
-        [3, 5, 7],
-        [4, 9, 2],
-    ]
+    value, unit = 2.5, "meter"
     # Act
-    result = validate_magic_square(grid)
+    lines = convert_to_lines(value, unit, profile="default")
     # Assert
-    assert result == {"status": "pass", "errors": []}
+    assert lines == [
+        "2.5 meter = 8.2021 feet",
+        "2.5 meter = 2.7340 yard",
+    ]
 ```
 
-## 파일 규칙
+business (KPI-5):
 
-| 경로 | 내용 |
-|------|------|
-| `tests/test_magic_square.py` | 없으면 생성; 있으면 함수 **1개** 추가 |
-| `tests/__init__.py` | 없으면 빈 파일 |
-| `src/magic_square.py` | **수정 금지** (없어도 RED 유지 — import/collection 실패 허용) |
+```python
+assert lines == [
+    "2.5 meter = 8.2021 feet",
+    "2.5 meter = 2.7340 yard",
+    "2.5 meter = 98.4252 inch",
+    "2.5 meter = 2500 mm",
+]
+```
 
-- RED 사이클당 테스트 **1개**만 추가.
-- `@pytest.mark.skip` · `xfail` · `pytest.raises`로 RED 회피 금지.
+### session — `run_continuous` (KPI-4)
 
-## 실행
+```python
+from src.session.continuous import run_continuous
+
+def test_kpi4_run_continuous_two_inputs_pass(monkeypatch):
+    # Arrange — stdin 시뮬: meter:2.5 → yard:3 → quit
+    # Act
+    groups = run_continuous(convert_fn=..., min_inputs=2)
+    # Assert
+    assert len(groups) >= 2
+```
+
+(monkeypatch·fixture는 **최소** — I/O는 GREEN에서 구현; RED는 `NotImplementedError` 실패면 충분)
+
+### validate_lines — fail (KPI-5)
+
+```python
+from src.validate_lines import validate_lines
+
+def test_kpi5_invalid_format_fail():
+    lines = ["2.5meter=8.2021feet"]
+    result = validate_lines(lines, profile="default")
+    assert result == {"status": "fail", "failed_lines": [...]}  # 엄격 또는 len≥1 + status
+```
+
+**pass/incomplete assert는 엄격 dict equality** — `.cursorrules` · `tests/test_validate_lines.py` 기존 스타일 따름.
+
+### entity — KPI-3
+
+```python
+def test_d_loc_01_blank_unit_invalid():
+    result = parse_unit_value_coords(":2.5")
+    assert result["status"] == "invalid"
+    assert len(result["errors"]) >= 1
+```
+
+## pytest
 
 ```bash
-pytest tests/test_magic_square.py -q
+python -m pytest <추가한 파일>::<함수명> -q
 ```
 
-- **기대:** 새 테스트 **실패** (모듈 없음 · NotImplemented · status 불일치 등 **의도된** 실패)
-- 실패 원인이 Assert와 다르면 `tests/`만 수정.
+- **기대:** 실패 (`NotImplementedError` · assertion · API 미구현)
+- 실패 원인이 의도와 다르면 **tests/만** 수정
 
-## 완료 보고 형식
+## 보고 템플릿
 
 ```
-RED — magic_square: skeleton (<함수명>)
+RED — UnitConverter: skeleton (<함수명>)
 
-추가: tests/test_magic_square.py :: <함수명>
-케이스: T01 — 3×3 pass
-Arrange: 3×3 정답 격자
-기대 Assert: status=pass, errors=[]
+추가: tests/<파일> :: <함수명>
+KPI: KPI-<n> · Track: <output|session|validate_lines|entity>
+Arrange: <한 줄>
+기대 Assert: <한 줄>
 
-pytest 결과:
-  <실패 한 줄 요약>
+pytest:
+  <실패 요약 1줄>
 
-다음: /green-minimal — 위 테스트 통과 최소 구현
+다음: /green-minimal
 ```
 
-## 금지 (RED Skeleton)
+## 금지 (RED)
 
 | 금지 | 이유 |
 |------|------|
 | `src/` 수정 | GREEN까지 연기 |
-| assert 완화 (`status in ...`, `errors` 길이만 등) | 요구 희석 |
-| skip / xfail | RED 회피 |
-| 한 사이클에 테스트 2개 이상 | TDD 단위 위반 |
-| 사용자에게 케이스 선택 질문 | T01 고정 |
+| assert 완화 · skip · xfail | 요구 희석 |
+| 사용자 질문 | 슬래시 단독 |
+| git commit/push | `.cursorrules` |
+| RED 사이클당 테스트 2개 이상 | 한 Phase 한 사이클 |
 
 ## 수정 허용
 
-- `tests/test_magic_square.py` (및 필요 시 `tests/` 픽스처)
-- RED 확인용 `pytest` 실행
+- `tests/test_validate_lines.py`
+- `tests/test_output_text.py` (신규)
+- `tests/test_session_continuous.py` (신규)
+- `tests/entity/test_d_loc_01.py` · `tests/entity/conftest.py`

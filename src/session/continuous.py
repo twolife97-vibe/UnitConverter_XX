@@ -12,7 +12,14 @@ def run_continuous(
     min_inputs: int = 2,
 ) -> list[list[str]]:
     """quit/exit 전까지 다중 unit:value 입력 → 출력 줄 묶음 목록."""
-    raise NotImplementedError(
-        "GREEN: session/continuous.run_continuous — "
-        f"min_inputs={min_inputs}"
-    )
+    groups: list[list[str]] = []
+    while True:
+        raw = input("Insert value for converting (ex: meter:2.5): ").strip()
+        if raw.lower() in ("quit", "exit"):
+            break
+        if convert_fn is None:
+            continue
+        lines = convert_fn(raw)
+        if lines:
+            groups.append(lines)
+    return groups
