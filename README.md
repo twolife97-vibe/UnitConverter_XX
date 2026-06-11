@@ -26,9 +26,9 @@
 |------|------|
 | `unit:value` 입력 (meter / feet / yard) | ✅ |
 | 형식·숫자·unknown unit 검증 | ✅ (부분) |
-| OCP / SRP 구조 | ❌ |
+| OCP / SRP 구조 | 🔄 (`src/input/entity/` 분리 진행) |
 | 음수 검증 | ❌ |
-| 테스트 코드 | ❌ |
+| 테스트 코드 | 🔄 (FR-01 entity D-LOC-01 RED 진행) |
 | 설정 외부화 (JSON/YAML) | ❌ |
 | 동적 단위 등록 | ❌ |
 | JSON / CSV / 표 출력 | ❌ |
@@ -111,6 +111,39 @@ Insert value for converting (ex: meter:2.5): meter:2.5
 - **출력 포맷 선택** — JSON / CSV / 표 형태 출력
 
 우선순위·KPI·릴리스 계획은 [`docs/PRD.md`](./docs/PRD.md) 참고.
+
+---
+
+## TDD — FR-01 entity (D-LOC-01)
+
+FR-01 `unit:value` 입력 파싱을 entity 레이어 `parse_unit_value_coords`로 검증합니다.  
+상세 계획: [`docs/PRD.md`](./docs/PRD.md) §4.1 FR-01 테스트 계획.
+
+**API** (`src/input/entity/d_loc_01.py`)
+
+```python
+from src.input.entity.d_loc_01 import parse_unit_value_coords
+
+result = parse_unit_value_coords("meter:2.5")
+# {"status": "ok"|"invalid", "unit": str|None, "value": float|None, "errors": list[str]}
+```
+
+**RED 테스트 (Track B · Logic)**
+
+| Test ID | pytest 함수 | 입력 | 기대 status | TDD |
+|---------|-------------|------|-------------|-----|
+| D-LOC-01-001 | `test_d_loc_01_blank_coords_row_major` | `"meter:"` | invalid | GREEN |
+| D-LOC-01-002 | `test_d_loc_01_valid_g1_meter` | `"meter:2.5"` (fixture) | ok | RED |
+| D-LOC-01-003 | `test_d_loc_01_missing_colon_invalid_format` | `"2.5"` | invalid | RED |
+
+**실행**
+
+```bash
+python -m pytest tests/entity/test_d_loc_01.py -v
+python -m pytest tests/entity/test_d_loc_01.py::test_d_loc_01_blank_coords_row_major -v
+```
+
+TDD Phase: RED는 `tests/`만 · GREEN은 `src/` 최소 · skip/xfail 금지 (`.cursorrules`).
 
 ---
 
