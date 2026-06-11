@@ -83,4 +83,6 @@ Mom Test **과거 수치**를 기준선으로, **측정 가능**하게 정의.
 
 - `STEP1_MomTest_Report.md` — Mom Test 워크북
 - `STEP1_MomTest_Interview_Transcript.md` — 인터뷰 전문
+- `STEP3_ValidateLines_Report.md` — validate_lines 출력 계약 · STEP2 정합
+- `validate_lines.py` — 계약 구현
 - `README.md` — 구현·추가 요구사항 (설정 외부화, 동적 단위, 출력 포맷)

@@ -117,4 +117,5 @@ README 추가 요구사항(설정 외부화, 동적 단위 등록, 출력 포맷
 | `STEP1_MomTest_Simulation_Report.md` | 역할 분리 3턴 시뮬레이션 (페르소나: 이준호) |
 | `STEP1_MomTest_Grading_Report.md` | 워크북 채점 (8/10) |
 | `STEP2_RGIO_Report.md` | R-G-I-O + 주제 + 성공 기준 |
+| `STEP3_ValidateLines_Report.md` | validate_lines 출력 계약 |
 | `01.UnitConverter_ProblemDefinition_Report.md` | 문제 정의 통합 보고서 |

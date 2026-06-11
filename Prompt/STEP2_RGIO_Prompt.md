@@ -78,3 +78,5 @@ Mom Test 인터뷰 종료 후:
 | `STEP1_MomTest_Prompt.md` | Mom Test 인터뷰 |
 | `STEP1_MomTest_Grading_Prompt.md` | 워크북 채점 |
 | `STEP2_RGIO_Prompt.md` | R-G-I-O + 성공 기준 (본 문서) |
+| `STEP3_ValidateLines_Prompt.md` | validate_lines 출력 계약 |
+| `STEP3_ValidateLines_Grading_Prompt.md` | STEP2 ↔ 계약 정합 리뷰 |

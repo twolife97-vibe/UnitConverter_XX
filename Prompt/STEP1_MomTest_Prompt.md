@@ -106,3 +106,4 @@ Mom Test 인터뷰 종료.
 | `STEP1_MomTest_Simulation_Prompt.md` | 역할 분리 3턴 시뮬레이션 |
 | `STEP1_MomTest_Grading_Prompt.md` | 워크북 채점 |
 | `STEP2_RGIO_Prompt.md` | R-G-I-O + 주제 + 성공 기준 |
+| `STEP3_ValidateLines_Prompt.md` | validate_lines 출력 계약 |

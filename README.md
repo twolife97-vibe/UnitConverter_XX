@@ -122,7 +122,9 @@ Insert value for converting (ex: meter:2.5): meter:2.5
 | [`Report/01.UnitConverter_ProblemDefinition_Report.md`](./Report/01.UnitConverter_ProblemDefinition_Report.md) | 문제 정의 (Mom Test + R-G-I-O) |
 | [`Report/STEP1_MomTest_Report.md`](./Report/STEP1_MomTest_Report.md) | Mom Test 워크북 |
 | [`Report/STEP2_RGIO_Report.md`](./Report/STEP2_RGIO_Report.md) | R-G-I-O · 성공 기준 |
-| [`Prompt/`](./Prompt/) | Mom Test · R-G-I-O · 채점 프롬프트 |
+| [`Report/STEP3_ValidateLines_Report.md`](./Report/STEP3_ValidateLines_Report.md) | validate_lines 출력 계약 |
+| [`validate_lines.py`](./validate_lines.py) | 출력 줄 검증 계약 구현 |
+| [`Prompt/`](./Prompt/) | Mom Test · R-G-I-O · validate_lines 프롬프트 |
 
 ---
 
