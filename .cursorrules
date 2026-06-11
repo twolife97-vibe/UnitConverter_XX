@@ -1,0 +1,55 @@
+# UnitConverter_XX — Cursor Rules
+
+## 프로젝트
+
+길이 단위 변환 CLI. STEP 3 핵심은 변환 **출력 줄** 검증 모듈 `src/validate_lines.py`.
+계약·프로필·STEP2 매핑: `Report/STEP3_ValidateLines_Report.md`.
+
+레이아웃:
+- `src/` — 구현
+- `tests/` — pytest (`pyproject.toml`: `pythonpath = ["."]`, `testpaths = ["tests"]`)
+- `UnitConverter.py` — CLI (별도 단계)
+
+## validate_lines API (목표 계약)
+
+`validate_lines(lines, *, profile="default"|"business", ...)` 반환형:
+
+```python
+{"status": "pass" | "fail" | "incomplete", "failed_lines": [...]}
+```
+
+| status | 의미 |
+|--------|------|
+| pass | 모든 검증 통과 |
+| fail | 형식·값·타깃 등 계약 위반 |
+| incomplete | 출력 부족·빈 줄 등 미완성 |
+
+- `failed_lines`: 위반 설명 문자열 목록. pass이면 `[]`.
+- 검증 대상은 **출력 줄만**. 입력 Invalid·판정·시간 KPI는 범위 밖.
+- 프로필: `default`(feet/yard 2줄·4자리), `business`(inch/mm 포함·meter 2자리·mm 정수).
+
+## TDD (엄격)
+
+사이클: **RED → GREEN → REFACTOR**. 한 Phase에 한 사이클만.
+
+| Phase | 수정 허용 | 금지 |
+|-------|-----------|------|
+| RED | `tests/` 만 | `src/` 수정, assert 완화, `@pytest.mark.skip`, `xfail` |
+| GREEN | `src/` — 테스트 통과에 필요한 최소 | 테스트 삭제·완화 |
+| REFACTOR | 구조 정리 (동작 동일) | 테스트·동작 변경 |
+
+- RED 확인: `pytest` 실패가 **의도된 실패**여야 함.
+- GREEN 확인: 추가한 테스트 전부 통과.
+- 테스트는 계약·STEP2 성공 기준을 코드로 고정한다.
+
+## AI 응답
+
+- **한국어**로 답한다.
+- TDD 작업 시 **첫 줄에 Phase 선언**: `RED`, `GREEN`, `REFACTOR` 중 하나.
+- 변경 범위를 명시하고, 요청 밖 파일은 건드리지 않는다.
+- 불필요한 파일·주석·리팩터 남발 금지. 최소 diff.
+
+## Git
+
+- **사용자가 요청할 때만** `git commit` / `git push` 한다.
+- 커밋 메시지는 변경 이유(why) 중심, 1~2문장.
